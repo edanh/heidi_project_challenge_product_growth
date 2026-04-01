@@ -1,0 +1,436 @@
+/* ============================================================
+   shared.css — Kinetic Incentive Design
+   Used by index.html, simulation.html, clinic-view.html
+   ============================================================ */
+
+/* --- Custom Properties ------------------------------------ */
+
+:root {
+  --bg:          #ffffff;
+  --bg-subtle:   #f8f8f6;
+  --border:      #e5e5e0;
+  --text:        #111111;
+  --text-muted:  #6b7280;
+  --accent:      #1d4ed8;
+  --accent-soft: #eff6ff;
+  --success:     #15803d;
+  --warning:     #b45309;
+  --nav-bg:      #111111;
+  --nav-text:    #f9f9f7;
+  --nav-active:  #ffffff;
+
+  --font-sans:  system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:  "SF Mono", "Fira Code", "Consolas", monospace;
+
+  --radius:     6px;
+  --max-width:  860px;
+  --gap:        2rem;
+}
+
+/* --- Reset ------------------------------------------------ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* --- Base ------------------------------------------------- */
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* --- Navigation ------------------------------------------- */
+
+nav {
+  background: var(--nav-bg);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+nav .nav-brand {
+  color: var(--nav-active);
+  font-weight: 800;
+  font-size: 1.25rem;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  margin-right: 2.5rem;
+  white-space: nowrap;
+  line-height: 1;
+  /* slight upward optical correction to sit on the same baseline as nav links */
+  position: relative;
+  top: -1px;
+}
+
+nav a {
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 0.875rem;
+  padding: 0 0.875rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+nav a:hover {
+  color: var(--nav-active);
+}
+
+nav a.active {
+  color: var(--nav-active);
+  border-bottom-color: var(--accent);
+}
+
+/* --- Page Layout ------------------------------------------ */
+
+main {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+}
+
+/* --- Typography ------------------------------------------- */
+
+h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: 3rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  max-width: 68ch;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+ul, ol {
+  padding-left: 1.25rem;
+  margin-bottom: 1rem;
+  max-width: 68ch;
+}
+
+li {
+  margin-bottom: 0.35rem;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+}
+
+/* --- Page Header ------------------------------------------ */
+
+.page-header {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.page-header .subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+  max-width: 60ch;
+}
+
+/* --- Section ---------------------------------------------- */
+
+section {
+  margin-bottom: 2.5rem;
+}
+
+/* --- Tables ----------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- Callout / Note --------------------------------------- */
+
+.callout {
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 1rem 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.callout p {
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+/* --- Math Block ------------------------------------------- */
+
+.math-block {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  margin: 1.25rem 0;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.8;
+}
+
+/* --- Figure Placeholder ----------------------------------- */
+
+.figure-placeholder {
+  background: var(--bg-subtle);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 1.5rem 0;
+}
+
+.figure-placeholder .label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+/* --- Interactive Panel ------------------------------------ */
+
+.panel {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.panel-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+
+/* --- Stat Callout ----------------------------------------- */
+
+.stat-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 1.5rem 0;
+}
+
+.stat {
+  flex: 1;
+  min-width: 120px;
+  padding: 1rem 1.25rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.stat .value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.stat .label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* --- Toggle ----------------------------------------------- */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.toggle {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-track {
+  position: absolute;
+  inset: 0;
+  background: #d1d5db;
+  border-radius: 28px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.toggle input:checked + .toggle-track {
+  background: var(--accent);
+}
+
+.toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.toggle input:checked ~ .toggle-thumb {
+  transform: translateX(24px);
+}
+
+.toggle-label {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* --- Slider ----------------------------------------------- */
+
+.slider-row {
+  margin: 1.25rem 0;
+}
+
+.slider-row label {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.slider-row label span {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  background: var(--border);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* --- Utility ---------------------------------------------- */
+
+.muted {
+  color: var(--text-muted);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.highlight {
+  background: #fef9c3;
+  padding: 0 0.15em;
+  border-radius: 2px;
+}

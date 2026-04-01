@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clinic View — Kinetic</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* --- Patient List ---------------------------------------- */
+
+    .patient-list {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .patient-item {
+      display: flex;
+      align-items: center;
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .patient-item:last-child { border-bottom: none; }
+    .patient-item:hover { background: var(--bg-subtle); }
+
+    .patient-info { flex: 1; min-width: 0; }
+
+    .patient-name {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .patient-meta {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 0.2em 0.6em;
+      border-radius: 99px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .tag-new     { background: #dbeafe; color: #1d4ed8; }
+    .tag-none    { background: #fee2e2; color: #b91c1c; }
+    .tag-partial { background: #fef3c7; color: #92400e; }
+    .tag-full    { background: #dcfce7; color: #15803d; }
+
+    .chevron {
+      color: var(--text-muted);
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    /* --- Detail View ----------------------------------------- */
+
+    #detail-view { display: none; }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-bottom: 1.75rem;
+      transition: color 0.1s;
+    }
+
+    .back-btn:hover { color: var(--text); }
+
+    /* --- Sharing Controls ------------------------------------ */
+
+    .sharing-panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
+      overflow: visible; /* tooltip must escape */
+    }
+
+    .sharing-panel-header {
+      background: var(--bg-subtle);
+      padding: 0.9rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-radius: var(--radius) var(--radius) 0 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sharing-panel-header.rounded {
+      border-radius: var(--radius);
+      border-bottom: none;
+    }
+
+    .sharing-panel-header-text { flex: 1; }
+
+    .sharing-panel-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .sharing-panel-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* --- Accordion ------------------------------------------- */
+
+    .accordion-trigger {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+      padding: 0.65rem 1.25rem;
+      border-top: 1px solid var(--border);
+      background: none;
+      width: 100%;
+      text-align: left;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+      transition: color 0.15s;
+    }
+
+    .accordion-trigger:hover { color: var(--text); }
+
+    .accordion-chevron {
+      display: inline-block;
+      transition: transform 0.2s;
+      font-style: normal;
+      font-size: 0.7rem;
+    }
+
+    .accordion-chevron.open { transform: rotate(90deg); }
+
+    .field-toggles {
+      padding: 0.25rem 0 0.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .field-toggles.hidden { display: none; }
+
+    .field-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.55rem 1.25rem 0.55rem 2rem;
+      gap: 1rem;
+    }
+
+    .field-toggle-row.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .field-toggle-info { flex: 1; }
+
+    .field-toggle-name {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .field-toggle-desc {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* --- Record Cards ---------------------------------------- */
+
+    .record-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+    }
+
+    .record-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .record-header {
+      background: var(--bg-subtle);
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .record-date   { font-weight: 600; }
+    .record-source { color: var(--text-muted); font-size: 0.77rem; }
+
+    .record-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    @media (max-width: 600px) {
+      .record-fields { grid-template-columns: 1fr; }
+      .field-cell { border-right: none !important; border-bottom: 1px solid var(--border); }
+      .field-cell:last-child { border-bottom: none; }
+    }
+
+    .field-cell {
+      padding: 0.75rem 1rem;
+      border-right: 1px solid var(--border);
+      font-size: 0.875rem;
+      transition: background 0.2s;
+    }
+
+    .field-cell:last-child { border-right: none; }
+
+    .field-cell-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .field-cell-value { line-height: 1.4; }
+
+    /* Locked state */
+    .field-cell.locked {
+      background: #fafafa;
+    }
+
+    .field-cell.locked .field-cell-label {
+      color: #d1d5db;
+    }
+
+    .field-cell.locked .field-cell-value {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .lock-bar {
+      display: inline-block;
+      height: 0.65em;
+      border-radius: 3px;
+      background: #e9eaec;
+    }
+
+    /* Nudge footer on locked records */
+    .record-nudge {
+      padding: 0.5rem 1rem;
+      background: #f8f9ff;
+      border-top: 1px solid #e8eaf6;
+      font-size: 0.78rem;
+      color: #4f6ab0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .record-nudge::before {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #93c5fd;
+      flex-shrink: 0;
+    }
+
+    /* --- Access Summary ------------------------------------- */
+
+    .access-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .access-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .access-dot.green  { background: #22c55e; }
+    .access-dot.yellow { background: #f59e0b; }
+    .access-dot.red    { background: #ef4444; }
+
+    /* --- Info icon + tooltip --------------------------------- */
+
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #d1d5db;
+      color: #374151;
+      font-size: 0.65rem;
+      font-weight: 700;
+      font-style: normal;
+      cursor: default;
+      position: relative;
+      flex-shrink: 0;
+      vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+
+    .info-icon:hover .tooltip {
+      display: block;
+    }
+
+    .tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      width: 240px;
+      background: #1f2937;
+      color: #f9fafb;
+      font-size: 0.78rem;
+      font-weight: 400;
+      line-height: 1.5;
+      padding: 0.6rem 0.75rem;
+      border-radius: var(--radius);
+      pointer-events: none;
+      z-index: 200;
+      white-space: normal;
+      text-align: left;
+    }
+
+    .tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: #1f2937;
+    }
+
+    /* --- Intake form ----------------------------------------- */
+
+    .intake-form {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .intake-section-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.45rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .intake-section-label.from-records {
+      background: #f0fdf4;
+      color: var(--success);
+      border-bottom-color: #bbf7d0;
+    }
+
+    .intake-section-label.to-complete {
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+    }
+
+    .intake-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .intake-grid:last-child { border-bottom: none; }
+
+    @media (max-width: 560px) {
+      .intake-grid { grid-template-columns: 1fr; }
+    }
+
+    .intake-field {
+      padding: 0.65rem 1rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .intake-field:last-child  { border-right: none; }
+    .intake-field.full-width  { grid-column: 1 / -1; border-right: none; }
+
+    .intake-field-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.3rem;
+    }
+
+    .intake-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: transparent;
+      padding: 0;
+      line-height: 1.4;
+    }
+
+    .intake-input::placeholder {
+      color: #d1d5db;
+    }
+
+    .intake-prefilled-value {
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+
+    .injury-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .injury-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .injury-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #22c55e;
+      flex-shrink: 0;
+      margin-top: 0.45em;
+    }
+
+    .injury-outcome {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .injury-date {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* --- Pre-filled field state ------------------------------ */
+
+    .intake-field.prefilled {
+      background: #f0fdf4;
+      transition: background 0.2s;
+    }
+
+    .intake-field.prefilled .intake-field-label {
+      color: #166534;
+      transition: color 0.2s;
+    }
+
+    .intake-field.prefilled .intake-input {
+      color: #166534;
+    }
+
+    /* Edited state — user has modified a pre-filled field */
+    .intake-field.edited {
+      background: #eff6ff;
+      transition: background 0.2s;
+    }
+
+    .intake-field.edited .intake-field-label {
+      color: #1d4ed8;
+      transition: color 0.2s;
+    }
+
+    .intake-field.edited .intake-input {
+      color: var(--text);
+    }
+
+    .prefill-badge {
+      display: inline-block;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #166534;
+      background: #dcfce7;
+      border-radius: 3px;
+      padding: 0.1em 0.4em;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .intake-field.edited .prefill-badge {
+      color: #1d4ed8;
+      background: #dbeafe;
+    }
+
+    .intake-input {
+      transition: color 0.2s;
+    }
+
+    /* --- Clinical Notes ------------------------------------- */
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .notes-grid { grid-template-columns: 1fr; }
+    }
+
+    .notes-textarea {
+      width: 100%;
+      min-height: 220px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-sans);
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--bg);
+      resize: vertical;
+      outline: none;
+      line-height: 1.6;
+      transition: border-color 0.15s;
+    }
+
+    .notes-textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .notes-textarea::placeholder {
+      color: #d1d5db;
+    }
+
+    .body-map-placeholder {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      min-height: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      background: var(--bg-subtle);
+    }
+
+    .body-map-placeholder .bm-icon {
+      font-size: 2rem;
+      opacity: 0.25;
+    }
+
+    .notes-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    /* --- Never shared / shared badges ----------------------- */
+
+    .never-shared-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #6b7280;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 99px;
+      padding: 0.15em 0.65em;
+      white-space: nowrap;
+    }
+
+    .shared-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #166534;
+      background: #dcfce7;
+      border: 1px solid #bbf7d0;
+      border-radius: 99px;
+      padding: 0.15em 0.65em;
+      white-space: nowrap;
+    }
+
+    /* --- Outgoing record form ------------------------------- */
+
+    .outgoing-record {
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .outgoing-field {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #dcfce7;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .outgoing-field:last-child { border-bottom: none; }
+
+    .outgoing-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #166534;
+      width: 130px;
+      flex-shrink: 0;
+    }
+
+    .outgoing-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+      color: var(--text);
+      background: transparent;
+      padding: 0;
+    }
+
+    .outgoing-input::placeholder { color: #d1d5db; }
+
+    .outgoing-select {
+      appearance: none;
+      cursor: pointer;
+      color: var(--text);
+    }
+
+    .outgoing-select option[value=""][disabled] { color: #d1d5db; }
+
+    /* --- Modal ---------------------------------------------- */
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-backdrop.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg);
+      border-radius: 10px;
+      padding: 2rem;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      animation: modal-in 0.18s ease;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .modal-icon {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.85rem;
+    }
+
+    .modal-body {
+      font-size: 0.9rem;
+      color: #374151;
+      line-height: 1.65;
+      margin-bottom: 0.75rem;
+      max-width: none;
+    }
+
+    .modal-body:last-of-type { margin-bottom: 1.5rem; }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s, background 0.15s;
+    }
+
+    .modal-btn:hover { opacity: 0.88; }
+
+    .modal-btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .modal-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* --- Action bar ----------------------------------------- */
+
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      padding: 0.9rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 3rem;
+      /* bleed to full main width */
+    }
+
+    .action-btn {
+      padding: 0.55rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: opacity 0.15s, background 0.15s;
+    }
+
+    .action-btn:hover { opacity: 0.85; }
+
+    .action-discard {
+      background: none;
+      color: var(--text-muted);
+      border-color: transparent;
+    }
+
+    .action-draft {
+      background: #f3f4f6;
+      color: #374151;
+      border-color: var(--border);
+    }
+
+    .action-save {
+      background: var(--accent);
+      color: white;
+    }
+
+    .action-save.no-share {
+      background: #1f2937;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Kinetic</a>
+    <a href="index.html">Explainer</a>
+    <a href="clinic-view.html" class="active">Clinic View</a>
+  </nav>
+
+  <!-- ====================================================== -->
+  <!-- LIST VIEW                                              -->
+  <!-- ====================================================== -->
+
+  <div id="list-view">
+    <main>
+      <header class="page-header">
+        <h1>Patients</h1>
+        <p class="subtitle">Northside Physiotherapy — four scenarios showing how sharing status affects what you can see when a patient arrives.</p>
+      </header>
+
+      <div class="patient-list" id="patient-list">
+        <!-- Rendered by JS -->
+      </div>
+
+      <p style="margin-top: 1.25rem; font-size: 0.85rem; color: var(--text-muted);">
+        Each patient demonstrates a different participation state. Click any row to see the detail view.
+      </p>
+    </main>
+  </div>
+
+
+  <!-- ====================================================== -->
+  <!-- DETAIL VIEW                                            -->
+  <!-- ====================================================== -->
+
+  <div id="detail-view">
+    <main>
+
+      <a class="back-btn" href="clinic-view.html">
+        &#8592; All patients
+      </a>
+
+      <header class="page-header" id="detail-header">
+        <!-- Rendered by JS -->
+      </header>
+
+      <div id="detail-callout" class="callout">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- -------------------------------------------------- -->
+      <section>
+        <h2>Record sharing</h2>
+
+        <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 60ch;">
+          This clinic participates in the Kinetic shared records network. Adjust sharing settings below — the patient intake form will update to reflect what is available.
+        </p>
+
+        <div class="sharing-panel">
+
+          <!-- Master toggle -->
+          <div class="sharing-panel-header" id="sharing-panel-header">
+            <div class="sharing-panel-header-text">
+              <div class="sharing-panel-title">
+                Access shared records
+                <span class="info-icon">i
+                  <span class="tooltip">This patient has consented to share their records. Record-sharing is opt-in for patients and allows clinics on the Kinetic network to access summarised clinical history when the patient presents for treatment.</span>
+                </span>
+              </div>
+              <div class="sharing-panel-subtitle" id="master-subtitle"><!-- set by JS --></div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="master-toggle">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+
+          <!-- Accordion trigger -->
+          <button class="accordion-trigger" id="accordion-trigger" type="button">
+            <i class="accordion-chevron" id="accordion-chevron">&#9658;</i>
+            Customise which fields are shared
+          </button>
+
+          <!-- Field-level toggles (collapsed by default) -->
+          <div class="field-toggles hidden" id="field-toggles">
+
+            <div class="field-toggle-row" id="row-patientinfo">
+              <div class="field-toggle-info">
+                <div class="field-toggle-name">Patient information</div>
+                <div class="field-toggle-desc">Height, weight, dominant hand, occupation, sport</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-patientinfo">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+
+            <div class="field-toggle-row" id="row-diagnosis">
+              <div class="field-toggle-info">
+                <div class="field-toggle-name">Diagnosis</div>
+                <div class="field-toggle-desc">Standardised diagnosis code and description</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-diagnosis">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+
+            <div class="field-toggle-row" id="row-treatment">
+              <div class="field-toggle-info">
+                <div class="field-toggle-name">Treatment type</div>
+                <div class="field-toggle-desc">Category of treatment — not session notes</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-treatment">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+
+            <div class="field-toggle-row" id="row-outcome">
+              <div class="field-toggle-info">
+                <div class="field-toggle-name">Outcome flags</div>
+                <div class="field-toggle-desc">Improving / Stable / Resolved / Deteriorated</div>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="toggle-outcome">
+                <div class="toggle-track"></div>
+                <div class="toggle-thumb"></div>
+              </label>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------- -->
+      <section id="section-intake">
+        <h2>Patient intake</h2>
+        <div id="intake-form">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------- -->
+      <section>
+        <h2>Prior clinic records</h2>
+        <div id="access-summary-line" class="access-summary">
+          <!-- Rendered by JS -->
+        </div>
+        <div class="record-list" id="record-list">
+          <!-- Rendered by JS -->
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------- -->
+      <section>
+        <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.75rem; margin-top:3rem;">
+          <h2 style="margin:0; border:none; padding:0;">Clinical notes</h2>
+          <span class="never-shared-badge">Never shared</span>
+        </div>
+        <p style="font-size:0.875rem; color:var(--text-muted); max-width:60ch; margin-bottom:1rem;">
+          Free-text notes, practitioner observations, and body map annotations are private to this clinic and are never shared through the Kinetic network.
+        </p>
+        <div class="notes-grid">
+          <div>
+            <p class="notes-label">Session notes</p>
+            <textarea class="notes-textarea" placeholder="Observations, assessment findings, treatment plan…"></textarea>
+          </div>
+          <div>
+            <p class="notes-label">Body map</p>
+            <img src="bodymap.jpg" alt="Body map" style="width:100%; border-radius:var(--radius); border:1px solid var(--border); display:block;">
+          </div>
+        </div>
+      </section>
+
+      <!-- -------------------------------------------------- -->
+      <section>
+        <div style="display:flex; align-items:baseline; gap:0.75rem; margin-bottom:0.75rem; margin-top:3rem;">
+          <h2 style="margin:0; border:none; padding:0;">Today's record</h2>
+          <span id="todays-record-badge" class="shared-badge">Shared to network</span>
+        </div>
+        <p id="todays-record-desc" style="font-size:0.875rem; color:var(--text-muted); max-width:60ch; margin-bottom:1rem;">
+          This record will be contributed to the Kinetic network once the patient discharges. It is visible to other participating clinics if this patient later presents elsewhere.
+        </p>
+        <div class="outgoing-record">
+          <div class="outgoing-field">
+            <label class="outgoing-label">Diagnosis</label>
+            <input class="outgoing-input" type="text" placeholder="e.g. L knee patellofemoral pain">
+          </div>
+          <div class="outgoing-field">
+            <label class="outgoing-label">Treatment type</label>
+            <input class="outgoing-input" type="text" placeholder="e.g. Manual therapy + exercise rehab">
+          </div>
+          <div class="outgoing-field">
+            <label class="outgoing-label">Outcome</label>
+            <select class="outgoing-input outgoing-select">
+              <option value="" disabled selected>Select outcome</option>
+              <option>Improving</option>
+              <option>Stable</option>
+              <option>Resolved</option>
+              <option>Deteriorated</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action bar -->
+      <div class="action-bar" id="action-bar">
+        <button class="action-btn action-discard" id="btn-discard" type="button">Discard</button>
+        <div style="display:flex; gap:0.75rem;">
+          <button class="action-btn action-draft" id="btn-draft" type="button">Save as draft</button>
+          <button class="action-btn action-save" id="btn-save" type="button">Save &amp; share</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ====================================================== -->
+  <!-- SHARING CONSENT MODAL                                  -->
+  <!-- ====================================================== -->
+
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-icon">&#9432;</div>
+      <h3 class="modal-title" id="modal-title">Enable record sharing?</h3>
+      <p class="modal-body">
+        Enabling sharing allows <strong id="modal-fields-text">patient information, diagnosis, treatment type, and outcome flags</strong> to be exchanged with other participating clinics on the Kinetic network.
+      </p>
+      <p class="modal-body">
+        Information sharing is opt-in for both clinics and patients. <strong>Clinical notes are never shared</strong> between clinics — only structured summary fields.
+      </p>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" id="modal-decline" type="button">Do not share</button>
+        <button class="modal-btn modal-btn-primary" id="modal-confirm" type="button">Share information</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // ============================================================
+    // Patient data
+    // ============================================================
+
+    const PATIENTS = [
+      {
+        id: 'a',
+        name: 'Jamie Chen',
+        age: 34,
+        meta: '3 prior clinics on record',
+        tag: 'Full sharing',
+        tagClass: 'tag-full',
+        intro: 'Jamie has records from 3 other participating clinics.',
+        calloutAccent: true,
+        sharing: { patientinfo: true, diagnosis: true, treatment: true, outcome: true },
+        records: [
+          { source: 'Musculoskeletal clinic · Sydney CBD',         date: 'Aug 2024', diagnosis: 'L knee meniscal irritation',  treatment: 'Manual therapy + exercise rehab',  outcome: 'Improving' },
+          { source: 'Sports clinic · Sydney, Inner East',        date: 'Mar 2024', diagnosis: 'L knee patellofemoral pain',  treatment: 'Strength & conditioning',          outcome: 'Resolved'  },
+          { source: 'General physiotherapy · Canberra',          date: 'Nov 2023', diagnosis: 'R ankle sprain (grade II)',   treatment: 'Joint mobilisation + taping',      outcome: 'Resolved'  },
+        ],
+        onboarding: {
+          prefill: {
+            height:   '172 cm',
+            weight:   '68 kg',
+            hand:     'Right',
+            sport:    'Social basketball, cycling',
+            occupation: 'Graphic designer',
+          },
+          knownInjuries: [
+            { label: 'L knee meniscal irritation',   outcome: 'Improving', date: 'Aug 2024' },
+            { label: 'L knee patellofemoral pain',   outcome: 'Resolved',  date: 'Mar 2024' },
+            { label: 'R ankle sprain (grade II)',    outcome: 'Resolved',  date: 'Nov 2023' },
+          ],
+        },
+      },
+      {
+        id: 'b',
+        name: 'Marcus Webb',
+        age: 51,
+        meta: '2 prior clinics on record',
+        tag: 'Not sharing',
+        tagClass: 'tag-none',
+        intro: 'Marcus has records from 2 other participating clinics.',
+        calloutAccent: false,
+        sharing: { patientinfo: false, diagnosis: false, treatment: false, outcome: false },
+        records: [
+          { source: 'Musculoskeletal clinic · Sydney, Lower North Shore', date: 'Jun 2024', diagnosis: 'Lower back strain (L4–L5)', treatment: 'Spinal manipulation + dry needling', outcome: 'Improving' },
+          { source: 'Rehabilitation clinic · Sydney, Inner West',         date: 'Jan 2023', diagnosis: 'Lumbar disc herniation',    treatment: 'Exercise therapy + hydrotherapy',   outcome: 'Resolved'  },
+        ],
+        onboarding: {
+          prefill: {
+            height:     '181 cm',
+            weight:     '94 kg',
+            hand:       'Right',
+            sport:      'Golf, walking',
+            occupation: 'Project manager',
+          },
+          knownInjuries: [
+            { label: 'Lower back strain (L4–L5)',  outcome: 'Improving', date: 'Jun 2024' },
+            { label: 'Lumbar disc herniation',     outcome: 'Resolved',  date: 'Jan 2023' },
+          ],
+        },
+      },
+      {
+        id: 'c',
+        name: 'Sarah Park',
+        age: 28,
+        meta: '1 prior clinic on record',
+        tag: 'Partial sharing',
+        tagClass: 'tag-partial',
+        intro: 'Sarah has records from 1 other participating clinic.',
+        calloutAccent: true,
+        sharing: { patientinfo: true, diagnosis: true, treatment: true, outcome: false },
+        records: [
+          { source: 'Sports clinic · Sydney, Eastern Suburbs', date: 'Sep 2024', diagnosis: 'R shoulder rotator cuff tear (partial)', treatment: 'Manual therapy + strength rehab', outcome: 'Improving' },
+        ],
+        onboarding: {
+          prefill: {
+            height:     '165 cm',
+            weight:     '58 kg',
+            hand:       'Right',
+            sport:      'Netball, yoga',
+            occupation: 'Physiotherapy student',
+          },
+          knownInjuries: [
+            { label: 'R shoulder rotator cuff tear (partial)', outcome: 'Improving', date: 'Sep 2024' },
+          ],
+        },
+      },
+    ];
+
+    // ============================================================
+    // State
+    // ============================================================
+
+    let activePatient = null;
+    let sharing = { patientinfo: false, diagnosis: false, treatment: false, outcome: false };
+    const SHARING_FIELDS = ['patientinfo', 'diagnosis', 'treatment', 'outcome'];
+
+    // ============================================================
+    // List view
+    // ============================================================
+
+    function renderList() {
+      const list = document.getElementById('patient-list');
+      list.innerHTML = PATIENTS.map(p => `
+        <a class="patient-item" href="clinic-view.html?patient=${p.id}">
+          <div class="patient-info">
+            <div class="patient-name">${p.name}</div>
+            <div class="patient-meta">${p.meta}</div>
+          </div>
+          <span class="tag ${p.tagClass}">${p.tag}</span>
+          <span class="chevron">›</span>
+        </a>
+      `).join('');
+    }
+
+    // ============================================================
+    // Detail view
+    // ============================================================
+
+    function showDetail(id) {
+      activePatient = PATIENTS.find(p => p.id === id);
+      sharing = { ...activePatient.sharing };
+
+      document.getElementById('list-view').style.display   = 'none';
+      document.getElementById('detail-view').style.display = 'block';
+
+      // Header
+      const header = document.getElementById('detail-header');
+      header.innerHTML = `
+        <h1>${activePatient.name}</h1>
+        <p class="subtitle">${activePatient.meta}</p>
+      `;
+
+      // Callout (initial render — updateCallout() keeps it live)
+      updateCallout();
+
+      // Master toggle
+      const master = document.getElementById('master-toggle');
+      const allOn  = SHARING_FIELDS.every(f => sharing[f]);
+      const someOn = SHARING_FIELDS.some(f => sharing[f]);
+      master.checked       = allOn;
+      master.indeterminate = !allOn && someOn;
+
+      // Field toggles
+      SHARING_FIELDS.forEach(f => {
+        document.getElementById(`toggle-${f}`).checked = sharing[f];
+      });
+
+      updateFieldRowsEnabled();
+      updateMasterSubtitle();
+      updateActionBar();
+      updateTodaysRecord();
+      renderOnboarding();
+      renderRecords();
+
+      window.scrollTo(0, 0);
+    }
+
+    function showList() {
+      document.getElementById('detail-view').style.display = 'none';
+      document.getElementById('list-view').style.display   = 'block';
+      activePatient = null;
+    }
+
+    function showListView() {
+      document.getElementById('list-view').style.display   = 'block';
+      document.getElementById('detail-view').style.display = 'none';
+    }
+
+    // ============================================================
+    // Toggle logic
+    // ============================================================
+
+    // Modal
+    const backdrop = document.getElementById('modal-backdrop');
+    let pendingField = null; // null = master toggle, string = individual field key
+
+    const FIELD_NAMES = {
+      patientinfo: 'patient information',
+      diagnosis:   'diagnosis',
+      treatment:   'treatment type',
+      outcome:     'outcome flags',
+    };
+
+    function showModal(field) {
+      pendingField = field || null;
+      document.getElementById('modal-fields-text').textContent = field
+        ? FIELD_NAMES[field]
+        : 'patient information, diagnosis, treatment type, and outcome flags';
+      backdrop.classList.add('visible');
+    }
+
+    function hideModal() {
+      backdrop.classList.remove('visible');
+    }
+
+    document.getElementById('modal-confirm').addEventListener('click', function () {
+      hideModal();
+      if (pendingField) {
+        sharing[pendingField] = true;
+        const allOn  = SHARING_FIELDS.every(f => sharing[f]);
+        const someOn = SHARING_FIELDS.some(f => sharing[f]);
+        const master = document.getElementById('master-toggle');
+        master.checked       = allOn;
+        master.indeterminate = !allOn && someOn;
+        updateFieldRowsEnabled();
+        updateMasterSubtitle();
+        updateCallout();
+        updateActionBar();
+        updateTodaysRecord();
+        renderOnboarding();
+        renderRecords();
+      } else {
+        applyMasterToggle(true);
+      }
+      pendingField = null;
+    });
+
+    document.getElementById('modal-decline').addEventListener('click', function () {
+      hideModal();
+      if (pendingField) {
+        document.getElementById(`toggle-${pendingField}`).checked = false;
+      } else {
+        document.getElementById('master-toggle').checked = false;
+      }
+      pendingField = null;
+    });
+
+    backdrop.addEventListener('click', function (e) {
+      if (e.target === backdrop) {
+        hideModal();
+        if (pendingField) {
+          document.getElementById(`toggle-${pendingField}`).checked = false;
+        } else {
+          document.getElementById('master-toggle').checked = false;
+        }
+        pendingField = null;
+      }
+    });
+
+    function applyMasterToggle(on) {
+      SHARING_FIELDS.forEach(f => {
+        sharing[f] = on;
+        document.getElementById(`toggle-${f}`).checked = on;
+      });
+      document.getElementById('master-toggle').indeterminate = false;
+      updateFieldRowsEnabled();
+      updateMasterSubtitle();
+      updateCallout();
+      updateActionBar();
+      updateTodaysRecord();
+      renderOnboarding();
+      renderRecords();
+    }
+
+    document.getElementById('master-toggle').addEventListener('change', function () {
+      if (this.checked) {
+        // show modal before committing — the modal callbacks call applyMasterToggle
+        showModal();
+      } else {
+        applyMasterToggle(false);
+      }
+    });
+
+    SHARING_FIELDS.forEach(field => {
+      document.getElementById(`toggle-${field}`).addEventListener('change', function () {
+        if (this.checked) {
+          // Show confirmation modal before applying — same as master toggle
+          showModal(field);
+          return;
+        }
+
+        // Turning off — apply immediately, no confirmation needed
+        sharing[field] = false;
+
+        const allOn  = SHARING_FIELDS.every(f => sharing[f]);
+        const someOn = SHARING_FIELDS.some(f => sharing[f]);
+        const master = document.getElementById('master-toggle');
+        master.checked       = allOn;
+        master.indeterminate = !allOn && someOn;
+
+        updateFieldRowsEnabled();
+        updateMasterSubtitle();
+        updateCallout();
+        updateActionBar();
+        updateTodaysRecord();
+        renderOnboarding();
+        renderRecords();
+      });
+    });
+
+    // Action bar
+    function updateActionBar() {
+      const anySharing = SHARING_FIELDS.some(f => sharing[f]);
+      const btn = document.getElementById('btn-save');
+      btn.textContent = anySharing ? 'Save & share' : 'Save';
+      btn.classList.toggle('no-share', !anySharing);
+    }
+
+    document.getElementById('btn-discard').addEventListener('click', function () {
+      window.location.href = 'clinic-view.html';
+    });
+
+    document.getElementById('btn-draft').addEventListener('click', function () {
+      alert('Saved as draft.');
+    });
+
+    document.getElementById('btn-save').addEventListener('click', function () {
+      alert(SHARING_FIELDS.some(f => sharing[f]) ? 'Record saved and shared to network.' : 'Record saved.');
+    });
+
+    function updateCallout() {
+      if (!activePatient) return;
+      const anySharing = SHARING_FIELDS.some(f => sharing[f]);
+      const allSharing = SHARING_FIELDS.every(f => sharing[f]);
+      const callout = document.getElementById('detail-callout');
+
+      let status;
+      if (!anySharing) {
+        status = 'Your clinic is not sharing — access to this patient\'s history is locked.';
+      } else if (allSharing) {
+        status = 'Your clinic is sharing — full access to this patient\'s history is available.';
+      } else {
+        status = 'Your clinic is partially sharing — some fields are accessible.';
+      }
+
+      callout.textContent = `${activePatient.intro} ${status}`;
+      callout.style.borderColor = anySharing ? 'var(--accent)' : '#fca5a5';
+      callout.style.background  = anySharing ? 'var(--accent-soft)' : '#fff1f2';
+    }
+
+    function updateTodaysRecord() {
+      const badge = document.getElementById('todays-record-badge');
+      const desc  = document.getElementById('todays-record-desc');
+      if (!badge || !desc) return;
+      const anySharing = SHARING_FIELDS.some(f => sharing[f]);
+      if (anySharing) {
+        badge.textContent = 'Shared to network';
+        badge.className   = 'shared-badge';
+        desc.textContent  = 'This record will be contributed to the Kinetic network once the patient discharges. It is visible to other participating clinics if this patient later presents elsewhere.';
+      } else {
+        badge.textContent = 'Not shared';
+        badge.className   = 'never-shared-badge';
+        desc.textContent  = 'Your clinic is not sharing. This record will remain private and will not be contributed to the Kinetic network.';
+      }
+    }
+
+    // Accordion
+    document.getElementById('accordion-trigger').addEventListener('click', function () {
+      const toggles = document.getElementById('field-toggles');
+      const chevron = document.getElementById('accordion-chevron');
+      const hidden  = toggles.classList.toggle('hidden');
+      chevron.classList.toggle('open', !hidden);
+    });
+
+    function updateFieldRowsEnabled() {
+      // Field rows are always interactive — individual fields can be toggled
+      // independently via their own confirmation modal.
+    }
+
+    function updateMasterSubtitle() {
+      const active = SHARING_FIELDS.filter(f => sharing[f]);
+      const sub = document.getElementById('master-subtitle');
+      const names = { patientinfo: 'Patient information', diagnosis: 'Diagnosis', treatment: 'Treatment type', outcome: 'Outcome flags' };
+
+      if (active.length === 0) {
+        sub.textContent = 'Off — patient history from other clinics is locked';
+      } else if (active.length === SHARING_FIELDS.length) {
+        sub.textContent = 'On — all fields shared, full access enabled';
+      } else {
+        sub.textContent = `Partial — sharing ${active.map(f => names[f]).join(', ')}`;
+      }
+    }
+
+    // ============================================================
+    // Onboarding form rendering
+    // ============================================================
+
+    function renderOnboarding() {
+      const container = document.getElementById('intake-form');
+      const ob = activePatient.onboarding;
+      const pf = (sharing.patientinfo && ob && ob.prefill) ? ob.prefill : {};
+
+      // Helper: a field that may be pre-filled from shared records
+      const field = (label, key, placeholder = '', full = false) => {
+        const value = pf[key] || '';
+        const hasPrefill = !!value;
+        const prefillClass = hasPrefill ? ' prefilled' : '';
+        const badge = hasPrefill ? '<span class="prefill-badge">from records</span>' : '';
+        const size = full ? ' full-width' : '';
+        const prefillAttr = hasPrefill ? ` data-prefill="${value.replace(/"/g, '&quot;')}"` : '';
+        return `
+          <div class="intake-field${prefillClass}${size}">
+            <div class="intake-field-label">${label}${badge}</div>
+            <input class="intake-input" type="text" value="${value}" placeholder="${value ? '' : (placeholder || '—')}"${prefillAttr}>
+          </div>`;
+      };
+
+      const blankFull = (label, placeholder = '') => `
+        <div class="intake-field full-width">
+          <div class="intake-field-label">${label}</div>
+          <input class="intake-input" type="text" placeholder="${placeholder || '—'}">
+        </div>`;
+
+      // Known injuries section
+      const hasInjuries = sharing.patientinfo && ob && ob.knownInjuries && ob.knownInjuries.length > 0;
+      const injuriesHtml = hasInjuries
+        ? `
+          <div class="intake-section-label from-records">Known injuries / prior conditions — from shared records</div>
+          <div class="intake-grid">
+            <div class="intake-field prefilled full-width">
+              <ul class="injury-list">
+                ${ob.knownInjuries.map(inj => `
+                  <li class="injury-item">
+                    <span class="injury-dot"></span>
+                    <span>${inj.label}</span>
+                    <span class="injury-outcome">${inj.outcome}</span>
+                    <span class="injury-date">${inj.date}</span>
+                  </li>`).join('')}
+              </ul>
+            </div>
+          </div>`
+        : `
+          <div class="intake-section-label to-complete">Known injuries / prior conditions</div>
+          <div class="intake-grid">
+            ${blankFull('Prior injuries or conditions', 'Ask patient')}
+          </div>`;
+
+      container.innerHTML = `
+        <div class="intake-form">
+
+          <div class="intake-section-label ${sharing.patientinfo && Object.keys(pf).length ? 'from-records' : 'to-complete'}">
+            ${sharing.patientinfo && Object.keys(pf).length ? 'Patient information — partially pre-filled from shared records' : 'Patient information — to complete today'}
+          </div>
+          <div class="intake-grid">
+            ${field('Height', 'height', 'cm')}
+            ${field('Weight', 'weight', 'kg')}
+            ${field('Dominant hand', 'hand', 'Left / Right')}
+            ${field('Occupation', 'occupation')}
+            ${field('Physical activity / sport', 'sport', 'e.g. Running, swimming, gym', true)}
+            ${blankFull("Reason for today's visit")}
+            ${blankFull('Current medications', 'None / list')}
+          </div>
+
+          ${injuriesHtml}
+
+        </div>`;
+
+      // Wire edited state on pre-filled inputs
+      container.querySelectorAll('.intake-input[data-prefill]').forEach(input => {
+        const originalValue = input.dataset.prefill;
+        const cell = input.closest('.intake-field');
+        const badge = cell.querySelector('.prefill-badge');
+
+        input.addEventListener('input', function () {
+          const isEdited = this.value !== originalValue;
+          cell.classList.toggle('prefilled', !isEdited);
+          cell.classList.toggle('edited', isEdited);
+          if (badge) badge.textContent = isEdited ? 'edited' : 'from records';
+        });
+      });
+    }
+
+    // ============================================================
+    // Record rendering
+    // ============================================================
+
+    function renderRecords() {
+      if (!activePatient) return;
+
+      const container = document.getElementById('record-list');
+      const masterOn  = sharing.diagnosis || sharing.treatment || sharing.outcome;
+
+      container.innerHTML = activePatient.records.map(rec => {
+        const fieldDefs = [
+          { field: 'diagnosis', label: 'Diagnosis',      value: rec.diagnosis },
+          { field: 'treatment', label: 'Treatment type', value: rec.treatment },
+          { field: 'outcome',   label: 'Outcome',        value: rec.outcome   },
+        ];
+
+        let lockedNames = [];
+        const cells = fieldDefs.map(({ field, label, value }) => {
+          const visible = masterOn && sharing[field];
+          if (visible) {
+            return `
+              <div class="field-cell">
+                <div class="field-cell-label">${label}</div>
+                <div class="field-cell-value">${value}</div>
+              </div>`;
+          } else {
+            lockedNames.push(label.toLowerCase());
+            // Two bars of slightly different widths to suggest redacted content
+            return `
+              <div class="field-cell locked">
+                <div class="field-cell-label">${label}</div>
+                <div class="field-cell-value">
+                  <span class="lock-bar" style="width:55%"></span>
+                </div>
+              </div>`;
+          }
+        }).join('');
+
+        const nudge = lockedNames.length > 0
+          ? `<div class="record-nudge">${lockedNames.length} field${lockedNames.length > 1 ? 's' : ''} available with sharing — ${lockedNames.join(', ')}</div>`
+          : '';
+
+        return `
+          <div class="record-card">
+            <div class="record-header">
+              <span class="record-date">${rec.date}</span>
+              <span class="record-source">${rec.source}</span>
+            </div>
+            <div class="record-fields">${cells}</div>
+            ${nudge}
+          </div>`;
+      }).join('');
+
+      // Access summary line
+      const visibleCount = ['diagnosis', 'treatment', 'outcome'].filter(f => masterOn && sharing[f]).length;
+      const total = 3;
+      const summary = document.getElementById('access-summary-line');
+      let dotClass, text;
+
+      if (visibleCount === 0)    { dotClass = 'red';    text = 'No fields accessible — enable sharing above'; }
+      else if (visibleCount < 3) { dotClass = 'yellow'; text = `${visibleCount} of ${total} fields accessible`; }
+      else                       { dotClass = 'green';  text = 'All fields accessible'; }
+
+      summary.innerHTML = `<span class="access-dot ${dotClass}"></span> ${text}`;
+    }
+
+    // ============================================================
+    // Init — read URL param to decide list vs. detail view
+    // ============================================================
+
+    const patientParam = new URLSearchParams(window.location.search).get('patient');
+    if (patientParam && PATIENTS.find(p => p.id === patientParam)) {
+      showDetail(patientParam);
+    } else {
+      renderList();
+      showListView();
+    }
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kinetic — Incentive Design</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* --- Game theory matrix --------------------------------- */
+
+    .game-matrix {
+      margin: 1.5rem 0;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .game-matrix table {
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.875rem;
+      min-width: 420px;
+    }
+
+    .gm-corner {
+      background: transparent;
+      border: none;
+    }
+
+    .gm-header-col {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      padding: 0.5rem 1rem 0.75rem;
+      border: none;
+    }
+
+    .gm-header-row {
+      text-align: right;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--text-muted);
+      padding: 0.75rem 1rem 0.75rem 0;
+      border: none;
+      white-space: nowrap;
+    }
+
+    .gm-cell {
+      border: 1px solid var(--border);
+      padding: 0.9rem 1rem;
+      background: var(--bg-subtle);
+      vertical-align: top;
+      position: relative;
+      min-width: 160px;
+    }
+
+    .gm-cell:first-of-type { border-radius: var(--radius) 0 0 0; }
+
+    .gm-outcome {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: var(--text);
+      margin-bottom: 0.6rem;
+    }
+
+    .gm-arrows {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .gm-arrow {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .gm-arrow-a { color: #dc2626; }  /* Clinic A's incentive */
+    .gm-arrow-b { color: #2563eb; }  /* Clinic B's incentive */
+
+    .gm-arrow-legend {
+      display: flex;
+      gap: 1.25rem;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+    }
+
+    .gm-arrow-legend span { display: flex; align-items: center; gap: 0.3rem; }
+
+    .gm-equilibrium {
+      background: #f0fdf4;
+      border-color: #86efac;
+    }
+
+    .gm-eq-label {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #15803d;
+      background: #dcfce7;
+      border: 1px solid #86efac;
+      border-radius: 3px;
+      padding: 0.15em 0.5em;
+      margin-top: 0.35rem;
+    }
+
+    /* --- Simulation ----------------------------------------- */
+
+    .sim-chart-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin: 1.5rem 0 1.25rem;
+      background: var(--bg-subtle);
+    }
+
+    #sim-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .sim-sliders {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem 2rem;
+      margin: 1.25rem 0;
+    }
+
+    @media (max-width: 640px) {
+      .sim-sliders { grid-template-columns: 1fr; }
+    }
+
+    .sim-slider-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .sim-slider-group label span {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .sim-slider-group .sim-desc {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      line-height: 1.45;
+    }
+
+    .sim-readout {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+    }
+
+    .sim-stat {
+      flex: 1;
+      min-width: 140px;
+      padding: 0.85rem 1rem;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .sim-stat .sv { font-size: 1.5rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; }
+    .sim-stat .sl { font-size: 0.775rem; color: var(--text-muted); }
+    .sim-stat.accent .sv { color: var(--accent); }
+    .sim-stat.good   .sv { color: #15803d; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-brand" href="index.html">Kinetic</a>
+    <a href="index.html" class="active">Explainer</a>
+    <a href="clinic-view.html">Clinic View</a>
+  </nav>
+
+  <main>
+
+    <header class="page-header">
+      <h1>Incentive Design Under Adversarial Conditions</h1>
+      <p class="subtitle">How to make sharing a selfish, rational decision for 1,800 competing physiotherapy clinics.</p>
+    </header>
+
+
+    <!-- ================================================== -->
+    <section>
+      <h2>The Problem</h2>
+
+      <p>Patients increasingly see multiple physiotherapists. Each clinic, however, treats them as a brand new patient. Intake forms are completed from the ground-up and prior injuries may be unmentioned or misremembered. Relevant treatment history is invisible. Clinics have asked for shared patient history, but their incentives are misaligned.</p>
+
+      <p>1,800 clinics were asked about sharing patient history:</p>
+
+      <ul>
+        <li><strong>71%</strong> wanted to receive patient history from other clinics</li>
+        <li><strong>19%</strong> were willing to share their own</li>
+        <li><strong>Primary fear:</strong> <em>"I don't want to help patients switch to competitors."</em></li>
+        <li><strong>Secondary fear:</strong> <em>"What if another physio judges my treatment?"</em></li>
+      </ul>
+
+      <p>Clinics want the benefit of a shared network without bearing any of the cost. The design task is to produce a system in which sharing becomes the selfish, rational choice, satisfying the clinic desire to have shared patient history.</p>
+
+    </section>
+
+
+    <!-- ================================================== -->
+    <section>
+      <h2>Game Theory Analysis of Patient Record Sharing</h2>
+
+      <h3>1 — The equilibrium is fixed at 19%</h3>
+
+      <p>Each clinic makes two independent decisions: share (S) or not share (NS). Currently, this structure creates a classic dominant strategy problem that is collectively sub-optimal, even though it is individually rational. Regardless of what a competitor does, competitive actors prefer to withhold records. This avoids the cost of sharing while still being able to receive records.</p>
+
+      <div class="game-matrix">
+        <table>
+          <thead>
+            <tr>
+              <th class="gm-corner"></th>
+              <th class="gm-header-col">Clinic B: Share</th>
+              <th class="gm-header-col">Clinic B: Don't Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th class="gm-header-row">Clinic A: Share</th>
+              <td class="gm-cell">
+                <div class="gm-outcome">Both receive records<br><span style="font-size:0.8rem;color:var(--text-muted)">Mutual benefit, shared cost</span></div>
+                <div class="gm-arrows">
+                  <span class="gm-arrow gm-arrow-a">↓</span>
+                  <span class="gm-arrow gm-arrow-b">→</span>
+                </div>
+              </td>
+              <td class="gm-cell">
+                <div class="gm-outcome">A contributes, B free-rides<br><span style="font-size:0.8rem;color:var(--text-muted)">A bears cost, B gains for free</span></div>
+                <div class="gm-arrows">
+                  <span class="gm-arrow gm-arrow-a">↓</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <th class="gm-header-row">Clinic A: Don't Share</th>
+              <td class="gm-cell">
+                <div class="gm-outcome">A free-rides, B contributes<br><span style="font-size:0.8rem;color:var(--text-muted)">B bears cost, A gains for free</span></div>
+                <div class="gm-arrows">
+                  <span class="gm-arrow gm-arrow-b">→</span>
+                </div>
+              </td>
+              <td class="gm-cell gm-equilibrium">
+                <div class="gm-outcome">Neither receives records<br><span style="font-size:0.8rem;color:#15803d">No cost, no benefit</span></div>
+                <div class="gm-eq-label">Nash equilibrium</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="gm-arrow-legend">
+          <span><span class="gm-arrow gm-arrow-a">↓</span> Clinic A's incentive to deviate</span>
+          <span><span class="gm-arrow gm-arrow-b">→</span> Clinic B's incentive to deviate</span>
+        </div>
+      </div>
+
+      <p>In the payoff matrix above, both clinics have an incentive to move toward "not sharing" (NS), if the competitor's position is fixed. Therefore, the system's stable resting point is NSNS.</p>
+
+      <p>If we take the survey data as intrinsic preference values:</p>
+
+      <ul>
+        <li>α = 0.19 (propensity to share) and,</li>
+        <li>γ = 0.71 (propensity to receive)</li>
+      </ul>
+
+      <p>the stationary distribution in the ungated system is:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Meaning</th>
+            <th>Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">SR</td><td>Shares and receives</td><td class="mono">α × γ = <strong>13.5%</strong></td></tr>
+          <tr><td class="mono">SNR</td><td>Shares, does not receive</td><td class="mono">α × (1−γ) = <strong>5.5%</strong></td></tr>
+          <tr><td class="mono">NSR</td><td>Receives without sharing</td><td class="mono">(1−α) × γ = <strong>57.5%</strong></td></tr>
+          <tr><td class="mono">NSNR</td><td>Neither</td><td class="mono">(1−α) × (1−γ) = <strong>23.5%</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <p>For a given clinic, the most likely position is NSR (57.5%), not sharing but still receiving patient records. It is the rational outcome in a competitive system.</p>
+      </div>
+
+
+      <h3>2 — Contribution-gating makes data-sharing the selfish option</h3>
+
+      <p>The solution presented here is contribution-gated access: a clinic can only receive patient history if it shares its own.</p>
+
+      <div class="callout">
+        <p>Sharing becomes the selfish act — it is necessary to access a valuable resource. The question each clinic faces is no longer "should I help competitors?" but "how do I access data that makes me competitive?"</p>
+      </div>
+
+      <p>Once NSR is inaccessible, any clinic that wants to receive (71%) now has to share to get it:</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>State</th>
+            <th>Meaning</th>
+            <th>Probability</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">SR</td><td>Shares and receives</td><td class="mono">γ = <strong>71.0%</strong></td></tr>
+          <tr><td class="mono">SNR</td><td>Shares, does not receive</td><td class="mono">α × (1−γ) = <strong>5.5%</strong></td></tr>
+          <tr><td class="mono">NSR</td><td>Eliminated by gating</td><td class="mono"><strong>0%</strong></td></tr>
+          <tr><td class="mono">NSNR</td><td>Rational non-participants</td><td class="mono">(1−α) × (1−γ) = <strong>23.5%</strong></td></tr>
+        </tbody>
+      </table>
+
+      <p>Assuming that sharing and receiving are independent motivators, this produces a total sharing of <strong>76.5%</strong>. In practice, however, a well-designed system would:</p>
+
+      <ul>
+        <li><strong>A:</strong> Increase incentive to share and receive</li>
+        <li><strong>B:</strong> Make sharing more attractive when more data is available</li>
+        <li><strong>C:</strong> Factor in competition between clinics</li>
+      </ul>
+
+
+      <h3>3 — Accounting for competitive friction and achieving 80% opt-in</h3>
+
+      <div class="callout">
+        <p>With gating in place, 76.5% of clinics are expected to share. This is a plateau reached by modelling the clinics as competitive actors. Achieving &gt;80% opt-in requires incentivisation by the competitive advantage of the new program.</p>
+      </div>
+
+      <p>After roll-out of the new program, we expect initial participation to match those surveyed who were willing to share (<strong>19%</strong>). In the competitive model, assuming clinics see 5% of their client base per week, we expect to reach 76.5% opt-in after 2.5 years. This motivates designing the new program to incentivise opt-in, to not only achieve &gt;80% but do so in a shorter time-frame.</p>
+
+      <p>If we model β as a competitive visibility multiplier, as the number of additional clinics drawn in per current participating clinics, the importance of incentives becomes clear: when β = 5%, the plateau goes from 76.5% to 86.7%.</p>
+
+      <p>Incentive design is also important to influence the rates of sharing, and increase the desire to receive patient data. The interactive plot below shows that a modest 5% increase to intrinsic sharing desire, receiving desire and competitive visibility, achieves the desired 80% opt-in by 94 weeks.</p>
+
+      <p>The three parameters that govern the system can each be shifted by product design. Adjust them below to see how the sharing rate evolves week by week as records accumulate and competitive visibility grows.</p>
+
+      <div class="sim-chart-wrap">
+        <svg id="sim-svg" viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg">
+          <!-- Grid and axes rendered by JS -->
+        </svg>
+      </div>
+
+      <div class="sim-sliders">
+
+        <div class="sim-slider-group">
+          <label>Desire to share (α) <span id="lbl-alpha">19%</span></label>
+          <input type="range" id="sl-alpha" min="0" max="1" step="0.01" value="0.19">
+          <p class="sim-desc">Fraction of clinics with an intrinsic willingness to share, regardless of incentive.</p>
+        </div>
+
+        <div class="sim-slider-group">
+          <label>Desire to receive (γ) <span id="lbl-gamma">71%</span></label>
+          <input type="range" id="sl-gamma" min="0" max="1" step="0.01" value="0.71">
+          <p class="sim-desc">Fraction of clinics that want access to patient history from other clinics.</p>
+        </div>
+
+        <div class="sim-slider-group">
+          <label>Competitive visibility (β) <span id="lbl-beta">0%</span></label>
+          <input type="range" id="sl-beta" min="0" max="1" step="0.01" value="0">
+          <p class="sim-desc">Competitive edge provided by shared patient records — how much seeing peers benefit from access draws additional clinics in beyond the gating floor.</p>
+        </div>
+
+      </div>
+
+      <div class="sim-readout">
+        <div class="sim-stat accent">
+          <div class="sv" id="rd-floor">—</div>
+          <div class="sl">Plateau — maximum participation rate</div>
+        </div>
+        <div class="sim-stat good">
+          <div class="sv" id="rd-equil">—</div>
+          <div class="sl">Projected sharing at 1 year (52 weeks)</div>
+        </div>
+        <div class="sim-stat">
+          <div class="sv" id="rd-n80">—</div>
+          <div class="sl">Weeks to reach 80% sharing</div>
+        </div>
+      </div>
+
+      <p>The following describes how the program has been designed to enforce these incentives to achieve the desired opt-in rates.</p>
+
+
+      <h3>4 — How incentives are enforced by application design</h3>
+
+      <p>The success of the proposed program hinges on how well the competitive advantage of data sharing is illustrated to the clinic. Several design decisions in Kinetic ensure that sharing is a selfish act rather than an altruistic one.</p>
+
+      <p>At the top of each patient record, the system indicates whether that patient has opted in to share records. This reframes the value proposition around the patient rather than the competitor. With this framing, a practitioner is not sharing their client data with competitors, it is gaining insight that their patient is offering. This patient-centric contextualisation encourages participation as a competitive act.</p>
+
+      <p>When sharing is enabled, intake data is pre-filled from prior records, saving time and improving completeness. Should the practitioner decide to opt-in at any point, a confirmation window enforces clarity about which data will be gained and shared.</p>
+
+      <p>Whether or not the practitioner selects sharing, available clinical metadata is shown. This signals their availability and relevance. However, it is made clear that these records are only available once data sharing is enabled. These design decisions address the primary fear, that the practitioners do not want to help their patients move to competitors, by reframing the data availability as patient-centric, and then offering the practitioner the ability to capitalise on what the patient is already willing to provide.</p>
+
+      <p>To address the secondary concern, about judgment by other practitioners, clinical notes are omitted from sharing and shared patient data is de-identified. Only the dates and geographical region are presented to the user as metadata for a structured summary of the patient information (diagnosis, treatment type, and outcome). The "save" button at the bottom of the document changes to a "save &amp; share" button when sharing is selected.</p>
+
+      <p>The design choices above enforce the incentive to participate, both in sharing and receiving, as well as illustrate the competitive advantage available to the practitioner, influencing the β-coefficient in the model above. I expect that even modest program performance will achieve the desired outcome.</p>
+
+    </section>
+
+
+  </main>
+
+  <script>
+    // ============================================================
+    // Weekly dynamic model
+    //
+    // Each week, clinics join based on:
+    //   - Intrinsic sharers (SNR group): α×(1-γ) × encounter rate
+    //   - Record-motivated clinics (SR group): γ×ρ(t) × encounter rate
+    // Both terms are multiplied by the remaining gap to the gating
+    // floor so the system plateaus at α+(1-α)×γ when β=0.
+    // β adds competitive-visibility pressure beyond the floor.
+    // ============================================================
+
+    const C        = { w: 700, h: 300, ml: 58, mr: 24, mt: 24, mb: 44 };
+    const CW       = C.w - C.ml - C.mr;
+    const CH       = C.h - C.mt - C.mb;
+    const N_WEEKS  = 130;     // x-axis range (≈ 2.5 years)
+    const LONG_RUN = 400;     // weeks to run for plateau calculation
+    const ENCOUNTER = 0.05;  // fraction of patient base seen per week
+
+    function toX(week) { return C.ml + (week / N_WEEKS) * CW; }
+    function toY(rho)  { return C.mt + (1 - Math.min(rho, 1)) * CH; }
+
+    function gatingFloor(alpha, gamma) {
+      return alpha + (1 - alpha) * gamma;
+    }
+
+    // Step the model one week forward
+    function step(rho, alpha, gamma, beta) {
+      const floor        = gatingFloor(alpha, gamma);
+      const intrinsic    = alpha * (1 - gamma) * ENCOUNTER;
+      const recordDriven = gamma * rho * ENCOUNTER;
+      const gap          = Math.max(0, floor - rho);
+      const naturalGrowth = (floor > 0)
+        ? (intrinsic + recordDriven) * gap / floor
+        : 0;
+      const competitive  = beta * rho * ENCOUNTER * Math.max(0, 1 - rho);
+      return Math.min(1, rho + naturalGrowth + competitive);
+    }
+
+    // Simulate for `weeks` steps, starting at ρ=α (intrinsic sharers)
+    function simulate(alpha, gamma, beta, weeks) {
+      const curve = [alpha];
+      let rho = alpha;
+      for (let t = 1; t <= weeks; t++) {
+        rho = step(rho, alpha, gamma, beta);
+        curve.push(rho);
+      }
+      return curve;
+    }
+
+    function pct(v) { return (v * 100).toFixed(1) + '%'; }
+
+    function buildCurvePath(curve) {
+      return curve.map((rho, i) =>
+        (i === 0 ? 'M' : 'L') + toX(i).toFixed(1) + ',' + toY(rho).toFixed(1)
+      ).join(' ');
+    }
+
+    function buildFloorPath(floorVal) {
+      const y = toY(floorVal).toFixed(1);
+      return `M${toX(0).toFixed(1)},${y} L${toX(N_WEEKS).toFixed(1)},${y}`;
+    }
+
+    // ============================================================
+    // SVG scaffold (drawn once)
+    // ============================================================
+
+    function initChart() {
+      const svg = document.getElementById('sim-svg');
+      const ns  = 'http://www.w3.org/2000/svg';
+
+      const mk = (tag, attrs) => {
+        const el = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+        return el;
+      };
+
+      // Background
+      svg.appendChild(mk('rect', { x: C.ml, y: C.mt, width: CW, height: CH, fill: '#ffffff', stroke: '#e5e5e0', 'stroke-width': 1 }));
+
+      // Y grid lines + labels
+      [0, 0.2, 0.4, 0.6, 0.8, 1.0].forEach(r => {
+        const y = toY(r);
+        svg.appendChild(mk('line', { x1: C.ml, y1: y, x2: C.ml + CW, y2: y, stroke: '#f0f0ed', 'stroke-width': r === 0 || r === 1 ? 1 : 0.75 }));
+        const lbl = mk('text', { x: C.ml - 6, y: y + 4, 'text-anchor': 'end', fill: '#9ca3af', 'font-size': 11, 'font-family': 'system-ui, sans-serif' });
+        lbl.textContent = Math.round(r * 100) + '%';
+        svg.appendChild(lbl);
+      });
+
+      // X axis ticks + labels (every 26 weeks = 6 months)
+      [0, 26, 52, 78, 104, 130].forEach((w, i) => {
+        const x = toX(w);
+        svg.appendChild(mk('line', { x1: x, y1: C.mt + CH, x2: x, y2: C.mt + CH + 4, stroke: '#9ca3af', 'stroke-width': 1 }));
+        const lbl = mk('text', { x, y: C.mt + CH + 16, 'text-anchor': 'middle', fill: '#9ca3af', 'font-size': 11, 'font-family': 'system-ui, sans-serif' });
+        lbl.textContent = ['0', '6 mo', '1 yr', '18 mo', '2 yr', '2.5 yr'][i];
+        svg.appendChild(lbl);
+      });
+
+      // Axis labels
+      const yAxisLbl = mk('text', { x: 12, y: C.mt + CH / 2, 'text-anchor': 'middle', fill: '#6b7280', 'font-size': 11, 'font-family': 'system-ui, sans-serif', transform: `rotate(-90, 12, ${C.mt + CH / 2})` });
+      yAxisLbl.textContent = 'Sharing rate';
+      svg.appendChild(yAxisLbl);
+
+      const xAxisLbl = mk('text', { x: C.ml + CW / 2, y: C.h - 4, 'text-anchor': 'middle', fill: '#6b7280', 'font-size': 11, 'font-family': 'system-ui, sans-serif' });
+      xAxisLbl.textContent = 'Weeks';
+      svg.appendChild(xAxisLbl);
+
+      // Reference: 19% baseline (dashed)
+      const baseY = toY(0.19);
+      svg.appendChild(mk('line', { x1: C.ml, y1: baseY, x2: C.ml + CW, y2: baseY, stroke: '#d1d5db', 'stroke-width': 1, 'stroke-dasharray': '4 3' }));
+      const baseLbl = mk('text', { x: C.ml + CW - 4, y: baseY - 4, 'text-anchor': 'end', fill: '#9ca3af', 'font-size': 10, 'font-family': 'system-ui, sans-serif' });
+      baseLbl.textContent = '19% baseline';
+      svg.appendChild(baseLbl);
+
+      // Reference: 80% target (dashed)
+      const targetY = toY(0.80);
+      svg.appendChild(mk('line', { x1: C.ml, y1: targetY, x2: C.ml + CW, y2: targetY, stroke: '#86efac', 'stroke-width': 1, 'stroke-dasharray': '4 3' }));
+      const targetLbl = mk('text', { x: C.ml + 4, y: targetY - 4, 'text-anchor': 'start', fill: '#15803d', 'font-size': 10, 'font-family': 'system-ui, sans-serif' });
+      targetLbl.textContent = '80% target';
+      svg.appendChild(targetLbl);
+
+      // Gating floor line (dashed, updates with sliders)
+      svg.appendChild(mk('path', { id: 'sim-floor-path', stroke: '#93c5fd', 'stroke-width': 1, 'stroke-dasharray': '3 3', fill: 'none' }));
+      svg.appendChild(mk('text', { id: 'sim-floor-lbl', fill: '#3b82f6', 'font-size': 10, 'font-family': 'system-ui, sans-serif' }));
+
+      // Main curve (updates with sliders)
+      svg.appendChild(mk('path', { id: 'sim-curve', stroke: '#1d4ed8', 'stroke-width': 2.5, fill: 'none', 'stroke-linejoin': 'round' }));
+
+      // 80% crossing dot
+      svg.appendChild(mk('circle', { id: 'sim-dot80', r: 4, fill: '#15803d', stroke: '#ffffff', 'stroke-width': 1.5, display: 'none' }));
+    }
+
+    // ============================================================
+    // Update (called on every slider change)
+    // ============================================================
+
+    function update() {
+      const alpha = parseFloat(document.getElementById('sl-alpha').value);
+      const gamma = parseFloat(document.getElementById('sl-gamma').value);
+      const beta  = parseFloat(document.getElementById('sl-beta').value);
+
+      document.getElementById('lbl-alpha').textContent = pct(alpha);
+      document.getElementById('lbl-gamma').textContent = pct(gamma);
+      document.getElementById('lbl-beta').textContent  = pct(beta);
+
+      // Simulate visible window and long run
+      const curve     = simulate(alpha, gamma, beta, N_WEEKS);
+      const longCurve = simulate(alpha, gamma, beta, LONG_RUN);
+
+      // Draw curve
+      document.getElementById('sim-curve').setAttribute('d', buildCurvePath(curve));
+
+      // Plateau (long-run equilibrium including β)
+      const plateau = longCurve[longCurve.length - 1];
+
+      // Plateau line and label
+      document.getElementById('sim-floor-path').setAttribute('d', buildFloorPath(plateau));
+      const floorLbl = document.getElementById('sim-floor-lbl');
+      floorLbl.setAttribute('x', toX(2).toFixed(1));
+      floorLbl.setAttribute('y', (toY(plateau) - 5).toFixed(1));
+      floorLbl.textContent = 'Plateau ' + pct(plateau);
+
+      // 1-year projection
+      const at52 = curve[52];
+
+      // Weeks to first cross 80%
+      let w80 = null;
+      for (let i = 0; i < longCurve.length; i++) {
+        if (longCurve[i] >= 0.80) { w80 = i; break; }
+      }
+
+      // 80% crossing dot (only show if within chart window)
+      const dot = document.getElementById('sim-dot80');
+      if (w80 !== null && w80 <= N_WEEKS) {
+        dot.setAttribute('cx', toX(w80).toFixed(1));
+        dot.setAttribute('cy', toY(0.80).toFixed(1));
+        dot.removeAttribute('display');
+      } else {
+        dot.setAttribute('display', 'none');
+      }
+
+      // Readout stats
+      document.getElementById('rd-floor').textContent = pct(plateau);
+      document.getElementById('rd-equil').textContent = pct(at52);
+      document.getElementById('rd-n80').textContent   = w80 !== null ? w80 + ' weeks' : 'Not reached';
+    }
+
+    ['sl-alpha', 'sl-gamma', 'sl-beta'].forEach(id => {
+      document.getElementById(id).addEventListener('input', update);
+    });
+
+    initChart();
+    update();
+  </script>
+
+</body>
+</html>
